@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Task Upload</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        .file-list { margin-top: 2em; }
+        .file-item { margin-bottom: 0.5em; }
+    </style>
+</head>
+<body>
+    <h2>Task Upload</h2>
+    <form id="uploadForm">
+        <input type="file" id="fileInput" accept=".pdf,.pptx,.txt" required />
+        <button type="submit">Upload</button>
+    </form>
+    <div class="file-list">
+        <h3>Uploaded Files</h3>
+        <div id="files"></div>
+    </div>
+    <script>
+        const API_URL = 'http://localhost:8000'; // Change if backend is hosted elsewhere
+
+        async function fetchFiles() {
+            const res = await fetch(`${API_URL}/files`);
+            const files = await res.json();
+            const filesDiv = document.getElementById('files');
+            filesDiv.innerHTML = '';
+            files.forEach(file => {
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                div.innerHTML = `<a href="${API_URL}/files/${file.id}" target="_blank">${file.filename}</a> (${file.content_type}, ${new Date(file.uploaded_at).toLocaleString()})`;
+                filesDiv.appendChild(div);
+            });
+        }
+
+        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fileInput = document.getElementById('fileInput');
+            if (!fileInput.files.length) return;
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            const res = await fetch(`${API_URL}/upload`, {
+                method: 'POST',
+                body: formData
+            });
+            if (res.ok) {
+                alert('File uploaded!');
+                fileInput.value = '';
+                fetchFiles();
+            } else {
+                const err = await res.json();
+                alert('Upload failed: ' + err.detail);
+            }
+        });
+
+        fetchFiles();
+    </script>
+</body>
+</html> 
