@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Announcement System</title>
+    
+    <!-- Socket.IO Client from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        
+        .status {
+            background: #f8f9fa;
+            padding: 15px 30px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #dc3545;
+            animation: pulse 2s infinite;
+        }
+        
+        .status-indicator.connected {
+            background: #28a745;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .announcement-panel {
+            padding: 30px;
+            min-height: 400px;
+        }
+        
+        .announcement-card {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .announcement-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .announcement-body {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .announcement-timestamp {
+            font-size: 0.85em;
+            color: #999;
+            font-style: italic;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 60px 20px;
+        }
+        
+        .empty-state h3 {
+            margin-bottom: 10px;
+            color: #666;
+        }
+        
+        .test-section {
+            background: #f8f9fa;
+            padding: 20px 30px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .test-section h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+        
+        .curl-example {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📢 Real-time Announcements</h1>
+            <p>Live announcements appear here instantly</p>
+        </div>
+        
+        <div class="status">
+            <div class="status-indicator" id="statusIndicator"></div>
+            <span id="statusText">Connecting...</span>
+        </div>
+        
+        <div class="announcement-panel" id="announcePanel">
+            <div class="empty-state">
+                <h3>📭 No announcements yet</h3>
+                <p>Announcements will appear here in real-time when sent via API</p>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h3>🧪 Test the System</h3>
+            <p>Use this curl command to send an announcement:</p>
+            <div class="curl-example">
+curl -X POST http://localhost:8080/api/announce \<br>
+  -H "Content-Type: application/json" \<br>
+  -d '{"title": "Test Announcement", "body": "This is a test announcement!"}'
+            </div>
+            <p>Or use Postman with the same endpoint and JSON payload.</p>
+        </div>
+    </div>
+
+    <script>
+        // Connect to Socket.IO server
+        const socket = io();
+        const statusIndicator = document.getElementById('statusIndicator');
+        const statusText = document.getElementById('statusText');
+        const announcePanel = document.getElementById('announcePanel');
+        
+        // Connection status handling
+        socket.on('connect', function() {
+            statusIndicator.classList.add('connected');
+            statusText.textContent = 'Connected - Ready for announcements';
+            console.log('Connected to server');
+        });
+        
+        socket.on('disconnect', function() {
+            statusIndicator.classList.remove('connected');
+            statusText.textContent = 'Disconnected';
+            console.log('Disconnected from server');
+        });
+        
+        // Listen for new announcements
+        socket.on('new_announcement', function(data) {
+            console.log('Received announcement:', data);
+            
+            // Remove empty state if it exists
+            const emptyState = announcePanel.querySelector('.empty-state');
+            if (emptyState) {
+                emptyState.remove();
+            }
+            
+            // Create announcement card
+            const announcementCard = document.createElement('div');
+            announcementCard.className = 'announcement-card';
+            
+            // Format timestamp
+            const timestamp = new Date(data.timestamp * 1000);
+            const timeString = timestamp.toLocaleTimeString();
+            
+            announcementCard.innerHTML = `
+                <div class="announcement-title">${data.title}</div>
+                <div class="announcement-body">${data.body}</div>
+                <div class="announcement-timestamp">Received at ${timeString}</div>
+            `;
+            
+            // Add to the top of the panel
+            announcePanel.insertBefore(announcementCard, announcePanel.firstChild);
+            
+            // Keep only last 10 announcements
+            const cards = announcePanel.querySelectorAll('.announcement-card');
+            if (cards.length > 10) {
+                cards[cards.length - 1].remove();
+            }
+        });
+        
+        // Error handling
+        socket.on('connect_error', function(error) {
+            console.error('Connection error:', error);
+            statusText.textContent = 'Connection failed';
+        });
+    </script>
+</body>
+</html> 

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AI Month - Home</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <!-- Socket.IO Client from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+    
+    <style>
+        .announcement-panel {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .announcement-title {
+            font-size: 1.3em;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        
+        .announcement-body {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .announcement-timestamp {
+            font-size: 0.85em;
+            color: #999;
+            font-style: italic;
+            margin-top: 10px;
+        }
+        
+        .task-list {
+            background: white;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .task-item {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .task-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 id="welcome">Welcome!</h2>
+        
+        <!-- Announcement Panel -->
+        <div id="announcementPanel" class="announcement-panel" style="display: none;">
+            <div id="announcementTitle" class="announcement-title"></div>
+            <div id="announcementBody" class="announcement-body"></div>
+            <div id="announcementTimestamp" class="announcement-timestamp"></div>
+        </div>
+        
+        <button id="signout-btn">Sign Out</button>
+    </div>
+    
+    <script src="/static/main.js"></script>
+    <script>
+        // Display username if stored
+        const token = localStorage.getItem('token');
+        const username = localStorage.getItem('username');
+        if (username) {
+            document.getElementById('welcome').textContent = `Welcome, ${username}!`;
+        }
+        
+        // Socket.IO connection for announcements
+        const socket = io();
+        const announcementPanel = document.getElementById('announcementPanel');
+        const announcementTitle = document.getElementById('announcementTitle');
+        const announcementBody = document.getElementById('announcementBody');
+        const announcementTimestamp = document.getElementById('announcementTimestamp');
+        
+        // Show announcement if present in localStorage (from signin/signup)
+        const storedAnnouncement = localStorage.getItem('announcement');
+        console.log('Checking for stored announcement:', storedAnnouncement);
+        
+        if (storedAnnouncement) {
+            try {
+                const data = JSON.parse(storedAnnouncement);
+                console.log('Displaying stored announcement:', data);
+                alert('🎉 Welcome! You have a new announcement!');
+                
+                announcementTitle.innerHTML = data.title;
+                announcementBody.innerHTML = data.body;
+                const timestamp = new Date(data.timestamp * 1000);
+                const timeString = timestamp.toLocaleTimeString();
+                announcementTimestamp.textContent = `Received at ${timeString}`;
+                announcementPanel.style.display = 'block';
+                announcementPanel.style.animation = 'slideIn 0.5s ease-out';
+            } catch (e) {
+                console.error('Error parsing stored announcement:', e);
+            }
+            localStorage.removeItem('announcement');
+        }
+        
+        // Listen for new announcements
+        socket.on('new_announcement', function(data) {
+            console.log('Received real-time announcement:', data);
+            alert('📢 New announcement received!');
+            
+            announcementTitle.innerHTML = data.title;
+            announcementBody.innerHTML = data.body;
+            const timestamp = new Date(data.timestamp * 1000);
+            const timeString = timestamp.toLocaleTimeString();
+            announcementTimestamp.textContent = `Received at ${timeString}`;
+            announcementPanel.style.display = 'block';
+            announcementPanel.style.animation = 'slideIn 0.5s ease-out';
+        });
+        
+        // Connection status
+        socket.on('connect', function() {
+            console.log('Connected to announcement server');
+        });
+        
+        socket.on('disconnect', function() {
+            console.log('Disconnected from announcement server');
+        });
+    </script>
+</body>
+</html> 
