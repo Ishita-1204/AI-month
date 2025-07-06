@@ -10,8 +10,8 @@ import os
 app = Flask(__name__, static_folder='../frontend/static', template_folder='../frontend/templates')
 app.config['SECRET_KEY'] = 'your-secret-key-here'
 
-# Database configuration - using PostgreSQL
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:1204@localhost:5432/ai_month_db'
+# Database configuration - using SQLite for easier testing
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ai_month.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Enable CORS for all routes
@@ -271,6 +271,25 @@ def get_announcements():
         
         return jsonify({
             'announcements': [announcement.to_dict() for announcement in announcements]
+        }), 200
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/todays-announcements', methods=['GET'])
+def get_todays_announcements():
+    """API endpoint to get today's announcements"""
+    try:
+        from datetime import date
+        
+        today = date.today()
+        todays_announcements = Announcement.query.filter(
+            db.func.date(Announcement.created_at) == today
+        ).order_by(Announcement.created_at.desc()).all()
+        
+        return jsonify({
+            'announcements': [announcement.to_dict() for announcement in todays_announcements],
+            'count': len(todays_announcements)
         }), 200
         
     except Exception as e:

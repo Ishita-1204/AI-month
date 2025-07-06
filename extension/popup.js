@@ -4,6 +4,9 @@ const API_BASE = 'http://localhost:5000';
 // DOM elements
 const authSection = document.getElementById('authSection');
 const userSection = document.getElementById('userSection');
+const announcementsModal = document.getElementById('announcementsModal');
+const announcementsBar = document.getElementById('announcementsBar');
+const closeAnnouncementsModal = document.getElementById('closeAnnouncementsModal');
 const loginForm = document.getElementById('loginForm');
 const signupForm = document.getElementById('signupForm');
 const announcementsList = document.getElementById('announcementsList');
@@ -12,13 +15,12 @@ const minimizeBtn = document.getElementById('minimizeBtn');
 
 // State
 let isMaximized = false;
-let announcements = [];
+let todaysTasks = [];
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
     checkAuthStatus();
     setupEventListeners();
-    loadAnnouncements();
 });
 
 // Setup event listeners
@@ -33,6 +35,27 @@ function setupEventListeners() {
     
     // Logout
     document.getElementById('logoutBtn').addEventListener('click', handleLogout);
+    
+    // Announcements bar click
+    if (announcementsBar) {
+        announcementsBar.addEventListener('click', function() {
+            showAnnouncementsModal();
+        });
+    }
+    // Modal close button
+    if (closeAnnouncementsModal) {
+        closeAnnouncementsModal.addEventListener('click', function() {
+            hideAnnouncementsModal();
+        });
+    }
+    // Modal overlay click (outside content)
+    if (announcementsModal) {
+        announcementsModal.addEventListener('click', function(e) {
+            if (e.target === announcementsModal) {
+                hideAnnouncementsModal();
+            }
+        });
+    }
     
     // Maximize/Minimize
     maximizeBtn.addEventListener('click', maximize);
@@ -71,7 +94,7 @@ async function checkAuthStatus() {
             if (response.ok) {
                 // User is already signed in, show user section directly
                 showUserSection(username);
-                fetchAnnouncementsFromBackend();
+                loadTodaysTasks();
                 return;
             }
         } catch (error) {
@@ -90,14 +113,33 @@ function showAuthSection() {
     clearErrors();
 }
 
-// Show user section
+// Show user dashboard section
 function showUserSection(username) {
     authSection.classList.add('hidden');
     userSection.classList.remove('hidden');
     document.getElementById('welcomeText').textContent = `Welcome, ${username}!`;
     
-    // Load announcements when user section is shown
-    fetchAnnouncementsFromBackend();
+    // Show welcome banner
+    const welcomeBanner = document.getElementById('welcomeBanner');
+    const welcomeMessage = document.getElementById('welcomeMessage');
+    if (welcomeBanner && welcomeMessage) {
+        welcomeMessage.textContent = `Hello, ${username}! Welcome to AI Month!`;
+        welcomeBanner.style.display = 'block';
+    }
+}
+
+// Show announcements section
+function showAnnouncementsModal() {
+    if (announcementsModal) {
+        announcementsModal.style.display = 'flex';
+        loadTodaysTasks();
+    }
+}
+
+function hideAnnouncementsModal() {
+    if (announcementsModal) {
+        announcementsModal.style.display = 'none';
+    }
 }
 
 // Handle login
@@ -125,16 +167,10 @@ async function handleLogin() {
             localStorage.setItem('token', data.token);
             localStorage.setItem('username', username);
             
-            // Store announcement if present
-            if (data.announcement) {
-                addAnnouncement(data.announcement);
-                showNotification('Welcome! You have a new announcement!');
-            }
-            
-            // Immediately show user section and load announcements
+            // Show user section and load tasks
             showUserSection(username);
             clearErrors();
-            await fetchAnnouncementsFromBackend();
+            await loadTodaysTasks();
         } else {
             showError('loginError', data.error || 'Login failed');
         }
@@ -165,19 +201,12 @@ async function handleSignup() {
         const data = await response.json();
         
         if (response.ok) {
-            // Store announcement if present
-            if (data.announcement) {
-                addAnnouncement(data.announcement);
-                showNotification('Account created! You have a new announcement!');
-            }
-            
             // Show success message briefly, then switch to login
             showSuccess('signupError', 'Account created successfully! You can now sign in.');
             setTimeout(() => {
                 showLogin();
                 clearErrors();
             }, 2000);
-            await fetchAnnouncementsFromBackend();
         } else {
             showError('signupError', data.error || 'Signup failed');
         }
@@ -204,8 +233,8 @@ async function handleLogout() {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
     showAuthSection();
-    announcements = [];
-    renderAnnouncements();
+    todaysTasks = [];
+    renderTasks();
 }
 
 // Show signup form
@@ -261,50 +290,60 @@ function clearErrors() {
     });
 }
 
-// Add announcement
-function addAnnouncement(announcement) {
-    announcements.unshift(announcement);
-    if (announcements.length > 5) {
-        announcements = announcements.slice(0, 5);
+// Load today's tasks
+async function loadTodaysTasks() {
+    try {
+        console.log('Loading today\'s tasks...');
+        const response = await fetch(`${API_BASE}/api/todays-announcements`);
+        console.log('Response status:', response.status);
+        
+        if (response.ok) {
+            const data = await response.json();
+            console.log('Tasks data:', data);
+            
+            if (data.announcements && Array.isArray(data.announcements)) {
+                todaysTasks = data.announcements.map(task => ({
+                    title: task.title,
+                    description: task.body,
+                    created_at: task.created_at,
+                    created_by: task.created_by
+                }));
+                console.log('Processed tasks:', todaysTasks);
+                renderTasks();
+            } else {
+                console.log('No tasks array in response:', data);
+                todaysTasks = [];
+                renderTasks();
+            }
+        } else {
+            console.error('Failed to load tasks:', response.status, response.statusText);
+            todaysTasks = [];
+            renderTasks();
+        }
+    } catch (error) {
+        console.error('Error loading today\'s tasks:', error);
+        todaysTasks = [];
+        renderTasks();
     }
-    renderAnnouncements();
 }
 
-// Render announcements
-function renderAnnouncements() {
-    if (announcements.length === 0) {
-        announcementsList.innerHTML = '<div class="loading">No announcements yet. Sign in to see updates!</div>';
+// Render tasks
+function renderTasks() {
+    if (todaysTasks.length === 0) {
+        announcementsList.innerHTML = '<div class="no-tasks">No announcements for today yet! Check back later for updates.</div>';
         return;
     }
     
-    announcementsList.innerHTML = announcements.map(announcement => {
-        const time = new Date(announcement.timestamp * 1000).toLocaleTimeString();
+    announcementsList.innerHTML = todaysTasks.map(task => {
+        const time = new Date(task.created_at).toLocaleTimeString();
         return `
-            <div class="announcement">
-                <div class="announcement-title">${announcement.title}</div>
-                <div class="announcement-body">${announcement.body}</div>
-                <div class="announcement-time">${time}</div>
+            <div class="task-card">
+                <div class="task-title">${task.title}</div>
+                <div class="task-description">${task.description}</div>
+                <div class="task-time">Posted at ${time}</div>
             </div>
         `;
     }).join('');
-}
-
-// Load announcements from storage
-function loadAnnouncements() {
-    const stored = localStorage.getItem('announcements');
-    if (stored) {
-        try {
-            announcements = JSON.parse(stored);
-            renderAnnouncements();
-        } catch (error) {
-            console.error('Error loading announcements:', error);
-        }
-    }
-}
-
-// Save announcements to storage
-function saveAnnouncements() {
-    localStorage.setItem('announcements', JSON.stringify(announcements));
 }
 
 // Show browser notification
@@ -324,63 +363,16 @@ if ('Notification' in window && Notification.permission === 'default') {
 
 // Listen for messages from background script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    if (message.type === 'new_announcement') {
-        addAnnouncement(message.data);
-        showNotification('New announcement received!');
+    if (message.type === 'new_task') {
+        loadTodaysTasks();
+        showNotification('New task added!');
     }
 });
 
-// Save announcements when they change
-const originalAddAnnouncement = addAnnouncement;
-addAnnouncement = function(announcement) {
-    originalAddAnnouncement(announcement);
-    saveAnnouncements();
-};
-
-// Fetch announcements from backend
-async function fetchAnnouncementsFromBackend() {
-    try {
-        console.log('Fetching announcements from backend...');
-        const response = await fetch(`${API_BASE}/api/announcements`);
-        console.log('Response status:', response.status);
-        
-        if (response.ok) {
-            const data = await response.json();
-            console.log('Announcements data:', data);
-            
-            if (data.announcements && Array.isArray(data.announcements)) {
-                announcements = data.announcements.map(a => ({
-                    title: a.title,
-                    body: a.body,
-                    timestamp: a.timestamp || (new Date(a.created_at).getTime() / 1000),
-                    created_by: a.created_by
-                }));
-                console.log('Processed announcements:', announcements);
-                saveAnnouncements();
-                renderAnnouncements();
-            } else {
-                console.log('No announcements array in response:', data);
-                announcements = [];
-                renderAnnouncements();
-            }
-        } else {
-            console.error('Failed to fetch announcements:', response.status, response.statusText);
-            announcements = [];
-            renderAnnouncements();
-        }
-    } catch (error) {
-        console.error('Error fetching announcements:', error);
-        announcements = [];
-        renderAnnouncements();
-    }
-}
-
-// On popup open, always fetch latest announcements if logged in
+// On popup open, always load latest tasks if logged in
 window.addEventListener('DOMContentLoaded', async () => {
     const token = localStorage.getItem('token');
     if (token) {
-        await fetchAnnouncementsFromBackend();
-    } else {
-        loadAnnouncements();
+        await loadTodaysTasks();
     }
 }); 

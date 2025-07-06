@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 from backend.models import db, User, Session
 from flask_socketio import emit
 import uuid
-from datetime import datetime
+from datetime import datetime, date
 
 api_bp = Blueprint('api', __name__)
 
@@ -37,10 +37,35 @@ def send_welcome_announcement(username, is_new_user=False):
         'title': title,
         'body': body,
         'timestamp': datetime.now().timestamp(),
-        'username': username
+        'username': username,
+        'type': 'welcome_banner'
     }
     socketio.emit('new_announcement', announcement)
     return announcement
+
+def get_todays_announcements():
+    """Get all announcements for today"""
+    today = date.today()
+    from app import Announcement
+    
+    # Get announcements created today
+    todays_announcements = Announcement.query.filter(
+        db.func.date(Announcement.created_at) == today
+    ).order_by(Announcement.created_at.desc()).all()
+    
+    return [announcement.to_dict() for announcement in todays_announcements]
+
+@api_bp.route('/api/todays-announcements', methods=['GET'])
+def todays_announcements():
+    """API endpoint to get today's announcements"""
+    try:
+        announcements = get_todays_announcements()
+        return jsonify({
+            'announcements': announcements,
+            'count': len(announcements)
+        }), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @api_bp.route('/signup', methods=['POST'])
 def signup():

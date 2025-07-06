@@ -13,7 +13,7 @@
 
         body {
             width: 350px;
-            min-height: 400px;
+            min-height: 500px;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: #fff;
             color: #222;
@@ -23,25 +23,26 @@
 
         body.maximized {
             width: 600px;
-            min-height: 500px;
+            min-height: 600px;
         }
 
         .header {
-            padding: 15px;
+            padding: 20px;
             text-align: center;
             border-bottom: 2px solid #ff9800;
-            background: #fff3e0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
         }
 
         .header h1 {
-            font-size: 1.2em;
+            font-size: 1.4em;
             margin-bottom: 5px;
-            color: #ff9800;
+            font-weight: 300;
         }
 
         .header p {
-            font-size: 0.8em;
-            opacity: 0.8;
+            font-size: 0.9em;
+            opacity: 0.9;
         }
 
         .controls {
@@ -53,7 +54,7 @@
         }
 
         .btn-control {
-            background: #ff9800;
+            background: rgba(255,255,255,0.2);
             border: none;
             color: white;
             padding: 5px 8px;
@@ -64,12 +65,12 @@
         }
 
         .btn-control:hover {
-            background: #fb8c00;
+            background: rgba(255,255,255,0.3);
         }
 
         .content {
             padding: 20px;
-            height: calc(100vh - 80px);
+            height: calc(100vh - 100px);
             overflow-y: auto;
             background: #fff;
         }
@@ -77,33 +78,35 @@
         .auth-section {
             background: #fff3e0;
             border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
             border: 1px solid #ffe0b2;
         }
 
         .auth-section h3 {
-            margin-bottom: 10px;
-            font-size: 1em;
+            margin-bottom: 15px;
+            font-size: 1.1em;
             color: #ff9800;
+            text-align: center;
         }
 
         .form-group {
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 3px;
-            font-size: 0.8em;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: #333;
         }
 
         .form-group input {
             width: 100%;
-            padding: 8px;
+            padding: 10px;
             border: 1px solid #ff9800;
-            border-radius: 4px;
-            font-size: 0.8em;
+            border-radius: 6px;
+            font-size: 0.9em;
             background: #fff;
             color: #222;
         }
@@ -112,16 +115,19 @@
             background: #ff9800;
             color: white;
             border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
+            padding: 12px 20px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 0.8em;
-            margin-right: 5px;
-            transition: background 0.2s;
+            font-size: 0.9em;
+            margin-right: 8px;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 10px;
         }
 
         .btn:hover {
             background: #fb8c00;
+            transform: translateY(-1px);
         }
 
         .btn-secondary {
@@ -144,61 +150,105 @@
         .user-info {
             background: #fff3e0;
             border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
             border: 1px solid #ffe0b2;
         }
 
         .user-info h3 {
-            margin-bottom: 10px;
-            font-size: 1em;
+            margin-bottom: 15px;
+            font-size: 1.1em;
             color: #ff9800;
+            text-align: center;
         }
 
         .welcome-text {
-            font-size: 0.9em;
-            margin-bottom: 10px;
+            font-size: 1em;
+            margin-bottom: 15px;
+            text-align: center;
+            color: #333;
         }
 
-        .announcements-section {
+        .welcome-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            text-align: center;
+            animation: slideInDown 0.8s ease-out;
+        }
+        
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .welcome-banner h4 {
+            font-size: 1em;
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+        
+        .welcome-banner p {
+            font-size: 0.8em;
+            opacity: 0.9;
+        }
+
+        .dashboard-section {
             background: #fff3e0;
             border-radius: 8px;
-            padding: 15px;
+            padding: 20px;
             border: 1px solid #ffe0b2;
         }
 
-        .announcements-section h3 {
-            margin-bottom: 10px;
-            font-size: 1em;
+        .dashboard-section h3 {
+            margin-bottom: 15px;
+            font-size: 1.1em;
             color: #ff9800;
+            text-align: center;
         }
 
-        .announcement {
+        .task-card {
             background: #fff;
-            border-radius: 6px;
-            padding: 10px;
-            margin-bottom: 10px;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
             border-left: 4px solid #ff9800;
-            box-shadow: 0 2px 6px rgba(255,152,0,0.07);
+            box-shadow: 0 2px 8px rgba(255,152,0,0.1);
+            transition: all 0.3s ease;
         }
 
-        .announcement-title {
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255,152,0,0.2);
+        }
+
+        .task-title {
             font-weight: 600;
-            margin-bottom: 5px;
-            font-size: 0.9em;
+            margin-bottom: 8px;
+            font-size: 0.95em;
             color: #ff9800;
         }
 
-        .announcement-body {
-            font-size: 0.8em;
+        .task-description {
+            font-size: 0.85em;
             opacity: 0.9;
             line-height: 1.4;
+            color: #666;
         }
 
-        .announcement-time {
-            font-size: 0.7em;
+        .task-time {
+            font-size: 0.75em;
             opacity: 0.7;
-            margin-top: 5px;
+            margin-top: 8px;
+            color: #999;
         }
 
         .hidden {
@@ -207,20 +257,22 @@
 
         .error {
             color: #e53935;
-            font-size: 0.8em;
-            margin-top: 5px;
+            font-size: 0.85em;
+            margin-top: 8px;
+            text-align: center;
         }
 
         .success {
             color: #43a047;
-            font-size: 0.8em;
-            margin-top: 5px;
+            font-size: 0.85em;
+            margin-top: 8px;
+            text-align: center;
         }
 
         .loading {
             text-align: center;
             padding: 20px;
-            font-size: 0.8em;
+            font-size: 0.9em;
             opacity: 0.7;
         }
 
@@ -230,8 +282,119 @@
             color: #ff9800;
             text-decoration: underline;
             cursor: pointer;
-            font-size: 0.8em;
-            margin-top: 5px;
+            font-size: 0.85em;
+            margin-top: 10px;
+            width: 100%;
+        }
+
+        .no-tasks {
+            text-align: center;
+            color: #999;
+            padding: 30px;
+            font-style: italic;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.4);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px 20px 20px 20px;
+            width: 90vw;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            position: relative;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.1em;
+            color: #ff9800;
+        }
+        .close {
+            color: #aaa;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: #000;
+        }
+        .task-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+            border-left: 4px solid #ff9800;
+            box-shadow: 0 2px 8px rgba(255,152,0,0.1);
+        }
+        .task-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+            color: #ff9800;
+        }
+        .task-description {
+            font-size: 0.85em;
+            opacity: 0.9;
+            line-height: 1.4;
+            color: #666;
+        }
+        .task-time {
+            font-size: 0.75em;
+            opacity: 0.7;
+            margin-top: 8px;
+            color: #999;
+        }
+        .no-tasks {
+            text-align: center;
+            color: #999;
+            padding: 30px;
+            font-style: italic;
+        }
+        .announcements-bar {
+            position: fixed;
+            left: 0;
+            bottom: 0;
+            width: 100vw;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 -2px 12px rgba(102,126,234,0.08);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            padding: 0.5em 0;
+        }
+        .announcements-bar-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 8px 24px;
+            border-radius: 20px;
+            transition: background 0.2s;
+        }
+        .announcements-bar-btn:hover {
+            background: rgba(255,255,255,0.12);
         }
     </style>
 </head>
@@ -249,20 +412,20 @@
     <div class="content">
         <!-- Authentication Section -->
         <div class="auth-section" id="authSection">
-            <h3>🔐 Authentication</h3>
+            <h3>🔐 Sign In to Continue</h3>
             
             <!-- Login Form -->
             <div id="loginForm">
                 <div class="form-group">
                     <label for="username">Username:</label>
-                    <input type="text" id="username" placeholder="Enter username">
+                    <input type="text" id="username" placeholder="Enter your username">
                 </div>
                 <div class="form-group">
                     <label for="password">Password:</label>
-                    <input type="password" id="password" placeholder="Enter password">
+                    <input type="password" id="password" placeholder="Enter your password">
                 </div>
                 <button class="btn" id="loginBtn">Sign In</button>
-                <button class="btn btn-secondary" id="showSignupBtn">Sign Up</button>
+                <button class="btn btn-secondary" id="showSignupBtn">Create New Account</button>
                 <div id="loginError" class="error hidden"></div>
             </div>
 
@@ -270,34 +433,49 @@
             <div id="signupForm" class="hidden">
                 <div class="form-group">
                     <label for="signupUsername">Username:</label>
-                    <input type="text" id="signupUsername" placeholder="Enter username">
+                    <input type="text" id="signupUsername" placeholder="Choose a username">
                 </div>
                 <div class="form-group">
                     <label for="signupPassword">Password:</label>
-                    <input type="password" id="signupPassword" placeholder="Enter password">
+                    <input type="password" id="signupPassword" placeholder="Choose a password">
                 </div>
                 <button class="btn" id="signupBtn">Create Account</button>
-                <button class="btn btn-secondary" id="showLoginBtn">Back to Login</button>
+                <button class="btn btn-secondary" id="showLoginBtn">Back to Sign In</button>
                 <div id="signupError" class="error hidden"></div>
             </div>
         </div>
 
-        <!-- User Info Section -->
+        <!-- User Dashboard Section -->
         <div class="user-info hidden" id="userSection">
-            <h3>👤 User Info</h3>
+            <h3>👤 Welcome Back!</h3>
             <div class="welcome-text" id="welcomeText">Welcome!</div>
+            <div id="welcomeBanner" class="welcome-banner" style="display: none;">
+                <h4>🎉 Hello, Welcome to AI Month!</h4>
+                <p id="welcomeMessage">Your AI journey starts here</p>
+            </div>
             <button class="btn btn-danger" id="logoutBtn">Sign Out</button>
         </div>
 
-        <!-- Announcements Section -->
-        <div class="announcements-section" id="announcementsSection">
-            <h3>📢 Announcements</h3>
-            <div id="announcementsList">
-                <div class="loading">No announcements yet. Sign in to see updates!</div>
+        <!-- Announcements Modal -->
+        <div id="announcementsModal" class="modal-overlay" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>📢 Today's Announcements</h3>
+                    <span class="close" id="closeAnnouncementsModal">&times;</span>
+                </div>
+                <div id="announcementsList">
+                    <div class="loading">Loading today's announcements...</div>
+                </div>
             </div>
+        </div>
+
+        <!-- Fixed Announcements Bar -->
+        <div id="announcementsBar" class="announcements-bar">
+            <button class="announcements-bar-btn">📢 Announcements</button>
         </div>
     </div>
 
     <script src="popup.js"></script>
 </body>
+</html> 
 </html> 

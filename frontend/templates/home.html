@@ -8,6 +8,39 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
     
     <style>
+        .welcome-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            margin: 20px 0;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: slideInDown 0.8s ease-out;
+        }
+        
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .welcome-banner h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+        
+        .welcome-banner p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
         .announcement-panel {
             background: #f8f9fa;
             border-radius: 8px;
@@ -64,11 +97,107 @@
         .task-item:last-child {
             border-bottom: none;
         }
+        
+        .todays-announcements-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .todays-announcements-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .todays-announcements-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #000;
+        }
+        
+        .announcement-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .announcement-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .announcement-card p {
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .announcement-card .time {
+            font-size: 0.8em;
+            color: #999;
+            margin-top: 10px;
+        }
+        
+        .no-announcements {
+            text-align: center;
+            color: #999;
+            padding: 40px;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2 id="welcome">Welcome!</h2>
+        <!-- Welcome Banner -->
+        <div id="welcomeBanner" class="welcome-banner" style="display: none;">
+            <h1>🎉 Welcome to AI Month!</h1>
+            <p id="welcomeMessage">Your AI journey starts here</p>
+        </div>
+        
+        <!-- Today's Announcements Button -->
+        <div style="text-align: center;">
+            <button id="todaysAnnouncementsBtn" class="todays-announcements-btn">
+                📢 View Today's Announcements
+            </button>
+        </div>
         
         <!-- Announcement Panel -->
         <div id="announcementPanel" class="announcement-panel" style="display: none;">
@@ -80,13 +209,30 @@
         <button id="signout-btn">Sign Out</button>
     </div>
     
+    <!-- Today's Announcements Modal -->
+    <div id="todaysAnnouncementsModal" class="todays-announcements-modal">
+        <div class="modal-content">
+            <span class="close" id="closeModal">&times;</span>
+            <h2>📢 Today's Announcements</h2>
+            <div id="todaysAnnouncementsList">
+                <div class="loading">Loading today's announcements...</div>
+            </div>
+        </div>
+    </div>
+    
     <script src="/static/main.js"></script>
     <script>
         // Display username if stored
         const token = localStorage.getItem('token');
         const username = localStorage.getItem('username');
+        
+        // Show welcome banner
+        const welcomeBanner = document.getElementById('welcomeBanner');
+        const welcomeMessage = document.getElementById('welcomeMessage');
+        
         if (username) {
-            document.getElementById('welcome').textContent = `Welcome, ${username}!`;
+            welcomeMessage.textContent = `Welcome, ${username}! Your AI journey starts here`;
+            welcomeBanner.style.display = 'block';
         }
         
         // Socket.IO connection for announcements
@@ -104,7 +250,6 @@
             try {
                 const data = JSON.parse(storedAnnouncement);
                 console.log('Displaying stored announcement:', data);
-                alert('🎉 Welcome! You have a new announcement!');
                 
                 announcementTitle.innerHTML = data.title;
                 announcementBody.innerHTML = data.body;
@@ -122,7 +267,6 @@
         // Listen for new announcements
         socket.on('new_announcement', function(data) {
             console.log('Received real-time announcement:', data);
-            alert('📢 New announcement received!');
             
             announcementTitle.innerHTML = data.title;
             announcementBody.innerHTML = data.body;
@@ -141,6 +285,53 @@
         socket.on('disconnect', function() {
             console.log('Disconnected from announcement server');
         });
+        
+        // Today's Announcements Modal functionality
+        const modal = document.getElementById('todaysAnnouncementsModal');
+        const btn = document.getElementById('todaysAnnouncementsBtn');
+        const span = document.getElementById('closeModal');
+        const announcementsList = document.getElementById('todaysAnnouncementsList');
+        
+        btn.onclick = function() {
+            modal.style.display = 'block';
+            loadTodaysAnnouncements();
+        }
+        
+        span.onclick = function() {
+            modal.style.display = 'none';
+        }
+        
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        async function loadTodaysAnnouncements() {
+            try {
+                const response = await fetch('/api/todays-announcements');
+                const data = await response.json();
+                
+                if (response.ok && data.announcements) {
+                    if (data.announcements.length === 0) {
+                        announcementsList.innerHTML = '<div class="no-announcements">No announcements for today yet!</div>';
+                    } else {
+                        announcementsList.innerHTML = data.announcements.map(announcement => `
+                            <div class="announcement-card">
+                                <h3>${announcement.title}</h3>
+                                <p>${announcement.body}</p>
+                                <div class="time">Posted at ${new Date(announcement.created_at).toLocaleString()}</div>
+                            </div>
+                        `).join('');
+                    }
+                } else {
+                    announcementsList.innerHTML = '<div class="no-announcements">Error loading announcements</div>';
+                }
+            } catch (error) {
+                console.error('Error loading today\'s announcements:', error);
+                announcementsList.innerHTML = '<div class="no-announcements">Error loading announcements</div>';
+            }
+        }
     </script>
 </body>
 </html> 
